@@ -1,0 +1,1 @@
+# dle-webp-plugin
