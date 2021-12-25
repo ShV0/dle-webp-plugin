@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dleplugin>
+	<name>WebP and Native Lazy Loading for DLE</name>
+	<description></description>
+	<icon></icon>
+	<version>1.0.0</version>
+	<dleversion>14</dleversion>
+	<versioncompare>greater</versioncompare>
+	<upgradeurl></upgradeurl>
+	<filedelete>0</filedelete>
+	<needplugin></needplugin>
+	<mnotice>0</mnotice>
+	<mysqlinstall><![CDATA[]]></mysqlinstall>
+	<mysqlupgrade><![CDATA[]]></mysqlupgrade>
+	<mysqlenable><![CDATA[]]></mysqlenable>
+	<mysqldisable><![CDATA[]]></mysqldisable>
+	<mysqldelete><![CDATA[]]></mysqldelete>
+	<phpinstall><![CDATA[]]></phpinstall>
+	<phpupgrade><![CDATA[]]></phpupgrade>
+	<phpenable><![CDATA[]]></phpenable>
+	<phpdisable><![CDATA[]]></phpdisable>
+	<phpdelete><![CDATA[]]></phpdelete>
+	<notice><![CDATA[]]></notice>
+	<file name="engine/classes/parse.class.php">
+		<operation action="after">
+			<searchcode><![CDATA[$def->addAttribute('img', 'sizes', 'Text' );]]></searchcode>
+			<replacecode><![CDATA[$def->addAttribute('img', 'width', 'Text' );
+$def->addAttribute('img', 'height', 'Text' );
+$def->addAttribute('img', 'loading', 'Text' );
+$def->addAttribute('a', 'data-lity', 'Bool' );
+$def->addAttribute('iframe', 'loading', 'Text');
+$def->addAttribute('iframe', 'data-src', 'Text');]]></replacecode>
+		</operation>
+		<operation action="replace">
+			<searchcode><![CDATA[return "<!--dle_image_begin:{$info}-->".$this->htmlparser->purify("<img src=\"{$url}\" {$style} {$alt}>")."<!--dle_image_end-->";]]></searchcode>
+			<replacecode><![CDATA[		list($w, $h, $img_type) = getimagesize($url);
+
+		if($img_type == '2') {
+
+			$removedHomeUrl = str_replace($config['http_home_url'],'',$url);
+			$realFilePath = ROOT_DIR . '/' . $removedHomeUrl;
+			$newFilePath = preg_replace('(\.jpeg|\.jpg|\.JPG|\.JPEG)', '.webp', $realFilePath);
+
+			$img = imagecreatefromjpeg($url);
+			$webp = imagewebp($img, $newFilePath, 85);
+
+			imagedestroy($img);
+
+			$webpUrl = str_replace(ROOT_DIR . '/','',$newFilePath);
+			$webpUrl = $config['http_home_url'] . $webpUrl;
+
+		}
+		elseif($img_type == '3') {
+
+			$removedHomeUrl = str_replace($config['http_home_url'],'',$url);
+			$realFilePath = ROOT_DIR . '/' . $removedHomeUrl;
+			$newFilePath = preg_replace('(\.png|\.PNG)', '.webp', $realFilePath);
+
+			$img = imagecreatefrompng($url);
+			imagepalettetotruecolor($img);
+			imagealphablending($img, true);
+			imagesavealpha($img, true);
+			$webp = imagewebp($img, $newFilePath, 100);
+
+			imagedestroy($img);
+
+			$webpUrl = str_replace(ROOT_DIR . '/','',$newFilePath);
+			$webpUrl = $config['http_home_url'] . $webpUrl;
+
+		}
+
+		if($img_type == '3' || $img_type == '2') {
+
+			return "<!--dle_image_begin:{$info}-->".$this->htmlparser->purify("<picture><source type=\"image/webp\" srcset=\"$webpUrl\"><img loading=\"lazy\" src=\"$url\" class=\"imgFull\" width=\"{$w}\" height=\"{$h}\" {$style} {$alt}></picture>")."<!--dle_image_end-->";
+
+		}
+		else {
+
+			return "<!--dle_image_begin:{$info}-->".$this->htmlparser->purify("<img loading=\"lazy\" src=\"{$url}\" class=\"imgFull\" width=\"{$w}\" height=\"{$h}\" {$style} {$alt}>")."<!--dle_image_end-->";
+
+		}]]></replacecode>
+		</operation>
+		<operation action="replace">
+			<searchcode><![CDATA[else return "<!--TBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" class=\"highslide\" target=\"_blank\"><img src=\"$url\" style=\"float:{$align};max-width:100%;\" {$alt}></a>")."<!--TEnd-->";]]></searchcode>
+			<replacecode><![CDATA[// else return "<!--TBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" class=\"highslide\" target=\"_blank\"><img src=\"$url\" style=\"float:{$align};max-width:100%;\" {$alt}></a>")."<!--TEnd-->";]]></replacecode>
+		</operation>
+		<operation action="replace">
+			<searchcode><![CDATA[if( $align == '' ) return "<!--TBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" class=\"highslide\" target=\"_blank\"><img src=\"$url\" style=\"max-width:100%;\" {$alt}></a>")."<!--TEnd-->";]]></searchcode>
+			<replacecode><![CDATA[		list($w, $h, $img_type) = getimagesize($url);
+
+		if($img_type == '2') {
+
+			$removedHomeUrl = str_replace($config['http_home_url'],'',$url);
+			$realFilePath = ROOT_DIR . '/' . $removedHomeUrl;
+			$newFilePath = preg_replace('(\.jpeg|\.jpg)', '.webp', $realFilePath);
+
+			$img = imagecreatefromjpeg($url);
+			$webp = imagewebp($img, $newFilePath, 85);
+
+			imagedestroy($img);
+
+			$webpUrl = str_replace(ROOT_DIR . '/','',$newFilePath);
+			$webpUrl = $config['http_home_url'] . $webpUrl;
+
+		}
+		elseif($img_type == '3') {
+
+			$removedHomeUrl = str_replace($config['http_home_url'],'',$url);
+			$realFilePath = ROOT_DIR . '/' . $removedHomeUrl;
+			$newFilePath = preg_replace('(\.png|\.PNG)', '.webp', $realFilePath);
+
+			$img = imagecreatefrompng($url);
+			imagepalettetotruecolor($img);
+			imagealphablending($img, true);
+			imagesavealpha($img, true);
+			$webp = imagewebp($img, $newFilePath, 100);
+
+			imagedestroy($img);
+
+			$webpUrl = str_replace(ROOT_DIR . '/','',$newFilePath);
+			$webpUrl = $config['http_home_url'] . $webpUrl;
+
+		}
+
+		if($img_type == '3' || $img_type == '2') {
+
+			if( $align == '' ) return "<!--TBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" data-lity=\"true\"><picture><source type=\"image/webp\" srcset=\"$webpUrl\"><img loading=\"lazy\" src=\"$url\" class=\"imgFull\" width=\"{$w}\" height=\"{$h}\" {$alt}></picture></a>")."<!--TEnd-->";
+			else return "<!--TBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" class=\"highslide\"><picture><source type=\"image/webp\" srcset=\"$webpUrl\"><img loading=\"lazy\" src=\"$url\" class=\"imgFull\" width=\"{$w}\" height=\"{$h}\" {$alt}></picture></a>")."<!--TEnd-->";
+
+		}
+		else {
+			if( $align == '' ) return "<!--TBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" data-lity=\"true\"><img loading=\"lazy\" src=\"$url\" class=\"imgFull\" width=\"{$w}\" height=\"{$h}\" {$alt}></a>")."<!--TEnd-->";
+			else return "<!--TBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" class=\"highslide\"><img loading=\"lazy\" src=\"$url\" class=\"imgFull\" style=\"float:{$align}\" width=\"{$w}\" height=\"{$h}\" {$alt}></a>")."<!--TEnd-->";
+		}]]></replacecode>
+		</operation>
+		<operation action="replace">
+			<searchcode><![CDATA[else return "<!--MBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" class=\"highslide\"><img src=\"$url\" style=\"float:{$align};max-width:100%;\" {$alt}></a>")."<!--MEnd-->";]]></searchcode>
+			<replacecode><![CDATA[// else return "<!--MBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" class=\"highslide\"><img src=\"$url\" style=\"float:{$align};max-width:100%;\" {$alt}></a>")."<!--MEnd-->";]]></replacecode>
+		</operation>
+		<operation action="replace">
+			<searchcode><![CDATA[if( $align == '' ) return "<!--MBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" class=\"highslide\"><img src=\"$url\" style=\"max-width:100%;\" {$alt}></a>")."<!--MEnd-->";]]></searchcode>
+			<replacecode><![CDATA[		list($w, $h, $img_type) = getimagesize($url);
+
+		if($img_type == '2') {
+
+			$removedHomeUrl = str_replace($config['http_home_url'],'',$url);
+			$realFilePath = ROOT_DIR . '/' . $removedHomeUrl;
+			$newFilePath = preg_replace('(\.jpeg|\.jpg)', '.webp', $realFilePath);
+
+			$img = imagecreatefromjpeg($url);
+			$webp = imagewebp($img, $newFilePath, 100);
+
+			imagedestroy($img);
+
+			$webpUrl = str_replace(ROOT_DIR . '/','',$newFilePath);
+			$webpUrl = $config['http_home_url'] . $webpUrl;
+
+		}
+		elseif($img_type == '3') {
+
+			$removedHomeUrl = str_replace($config['http_home_url'],'',$url);
+			$realFilePath = ROOT_DIR . '/' . $removedHomeUrl;
+			$newFilePath = preg_replace('(\.png|\.PNG)', '.webp', $realFilePath);
+
+			$img = imagecreatefrompng($url);
+			imagepalettetotruecolor($img);
+			imagealphablending($img, true);
+			imagesavealpha($img, true);
+			$webp = imagewebp($img, $newFilePath, 85);
+
+			imagedestroy($img);
+
+			$webpUrl = str_replace(ROOT_DIR . '/','',$newFilePath);
+			$webpUrl = $config['http_home_url'] . $webpUrl;
+
+		}
+
+		if($img_type == '3' || $img_type == '2') {
+
+			if( $align == '' ) return "<!--MBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" data-lity=\"true\"><picture><source type=\"image/webp\" srcset=\"$webpUrl\"><img loading=\"lazy\" src=\"$url\" class=\"imgFull\" width=\"{$w}\" height=\"{$h}\" {$alt}></picture></a>")."<!--MEnd-->";
+			else return "<!--MBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" class=\"highslide\"><picture><source type=\"image/webp\" srcset=\"$webpUrl\"><img loading=\"lazy\" src=\"$url\" class=\"imgFull\" width=\"{$w}\" height=\"{$h}\" {$alt}></picture></a>")."<!--MEnd-->";
+
+		}
+		else {
+			if( $align == '' ) return "<!--MBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" data-lity=\"true\"><img loading=\"lazy\" src=\"$url\" class=\"imgFull\" width=\"{$w}\" height=\"{$h}\" {$alt}></a>")."<!--MEnd-->";
+			else return "<!--MBegin:{$info}-->".$this->htmlparser->purify("<a href=\"$gurl\" class=\"highslide\"><img loading=\"lazy\" src=\"$url\" class=\"imgFull\" style=\"float:{$align}\" width=\"{$w}\" height=\"{$h}\" {$alt}></a>")."<!--MEnd-->";
+		}]]></replacecode>
+		</operation>
+		<operation action="before">
+			<searchcode><![CDATA[return '<!--dle_media_begin:'.$decode_url.'-->'.$html.'<!--dle_media_end-->';]]></searchcode>
+			<replacecode><![CDATA[$html = str_replace( '<iframe', '<iframe class="lazy"', $html );
+$html = str_replace( 'src="', 'data-src="', $html );]]></replacecode>
+		</operation>
+	</file>
+</dleplugin>
