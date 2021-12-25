@@ -2,7 +2,7 @@
 ![DLE](https://img.shields.io/badge/DLE-14-blue.svg "DLE Version")
 ![License](https://img.shields.io/github/license/shv0/dle-webp-plugin)
 
-**Что делает модуль:**
+**Что делает плагин:**
 * При добавлении новости/публикации модуль автоматически создает копиию изображения в формате **.webp**.
 * В тег **img** добавлен **loading="lazy"**, который позволяет использовать нативнаую отложенную загрузку изображений на уровне браузера.
 * Изображения оформлены по [рекомендациям Google](https://developers.google.com/search/docs/advanced/guidelines/google-images?hl=ru). Также к тегу img, добавлены атрибуты **width** и **height** с значениями размеров уменьшеной копии картинки, для устранения проблем с Cumulative Layout Shift.
